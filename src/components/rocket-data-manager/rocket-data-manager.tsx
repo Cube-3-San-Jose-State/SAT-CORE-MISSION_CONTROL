@@ -29,6 +29,11 @@ import styles from "./rocket-data-manager.module.css"
 // function HoldabaleButton({ onClick } : { onClick })
 
 
+
+/**
+ * Control Panel to manage the rocket data.
+ * @returns 
+ */
 export function RocketDataManager() {
 
     const clear = useRocketDataClear();

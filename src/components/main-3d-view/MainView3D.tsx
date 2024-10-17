@@ -3,39 +3,28 @@ import { useMemo } from "react";
 import { Canvas } from "react-three-fiber";
 import { Quaternion, Vector3 } from "three";
 import { Quart, useCurrentData, useRocketData, Vec3 } from "../rocket-data-context/rocket-data-context";
+import { useQuaternion, useVector3 } from "../helpers/util/three-react-hooks";
 
 
 
 
 
-
-
-
-
-function useVector3(x:Vec3) {
-    return useMemo(() => {
-        return new Vector3(x.x, x.y, x.z);
-    }, [x.x, x.y, x.z]);
-}
-
-
-function useQuaternion(x:Quart) {
-    return useMemo(() => {
-        return new Quaternion(x.x, x.y, x.z, x.w);
-    }, [x.x, x.y, x.z, x.w]);
-}
 
 // function use
 
-
+/**
+ * Acceleration Indicator in 3D Viewport
+ * @returns 
+ */
 function AccelerationIndicator() {
-    // const data = useRocketData();
-    const current = useCurrentData();
 
-    // const offset = useVector3(current?.position ?? { x: 0, y: 0, z: 0});
-    // useEffect(()=>{offset.multiplyScalar(-1);}, [offset]);
+    // Get current data.
+    const current = useCurrentData();
+    
+    // Default to zero if there is no current frame.
     const acceleration = useVector3(current?.acceleration ?? { x: 0, y: 0, z: 0});
 
+    // Calculate points to draw acceleration direction arrow.
     const points = useMemo(() => {
         acceleration.normalize();
         acceleration.multiplyScalar(0.02);
@@ -44,8 +33,7 @@ function AccelerationIndicator() {
             acceleration
         ];
     }, [acceleration]);
-    // console.log(points);
-    // console.log(offset);
+
     return <Line
 
         // scale={[f, f, f]}
@@ -58,13 +46,13 @@ function AccelerationIndicator() {
 
 
 function VelocityIndicator() {
-    // const data = useRocketData();
+    // Get current data.
     const current = useCurrentData();
 
-    // const offset = useVector3(current?.position ?? { x: 0, y: 0, z: 0});
-    // useEffect(()=>{offset.multiplyScalar(-1);}, [offset]);
+    // Default to zero if there is no current frame.
     const velocity = useVector3(current?.velocity ?? { x: 0, y: 0, z: 0});
 
+    // Calculate points to draw velocity direction arrow.
     const points = useMemo(() => {
         velocity.normalize();
         velocity.multiplyScalar(0.02);
@@ -73,8 +61,7 @@ function VelocityIndicator() {
             velocity
         ];
     }, [velocity]);
-    // console.log(points);
-    // console.log(offset);
+
     return <Line
 
         // scale={[f, f, f]}
@@ -87,15 +74,18 @@ function VelocityIndicator() {
 
 
 
-
+/**
+ * Orientation indicator
+ * @returns 
+ */
 function OrientationIndicator() {
+    // Get current data.
     const current = useCurrentData();
 
-    // const offset = useVector3(current?.position ?? { x: 0, y: 0, z: 0});
-    // useEffect(()=>{offset.multiplyScalar(-1);}, [offset]);
-    const orientation = useQuaternion(current?.orientation ?? { x: 0, y: 0, z: 0, w: 0});
+    // Default to no rotation if there is no current frame.
+    const orientation = useQuaternion(current?.orientation ?? { x: 0, y: 0, z: 0, w: 1});
 
-    
+    // // Line Version of the orientation indicator
     // const points = useMemo(() => {
     //     // velocity.normalize();
     //     // velocity.multiplyScalar(0.02);
@@ -114,6 +104,7 @@ function OrientationIndicator() {
     //     lineWidth={3}  
     // />
 
+    // Box Version of the orientation indicator
     return <mesh 
         quaternion={orientation}
         scale={[0.005,0.005,0.005]}
@@ -126,30 +117,24 @@ function OrientationIndicator() {
 
 
 
+// Linear units to three js linear units.
 const SCALE = 0.01;
 export default function MainView3D({  }) {
 
+    // Use all the previous rocket data.
     const data = useRocketData();
-    // current = current ?? data.length - 1;
 
+    // Convert all previous position points into an array of THREE Vectors.
     const points = useMemo(() => {
-        // const out = [];
-        // for(let i = 0; i <= 1.0; i +=0.01) {
-        //     out.push(parametricFunction(i));
-        // }
         return data.map((d) => new Vector3(d.position.x * SCALE, d.position.y * SCALE, d.position.z * SCALE));
     }, [data]);
 
-    // let [ f, setF ] = useState(1.0);
-    // const [ zoom, setZoom ] = useState(1.0);
-    // const f = Math.pow(10, zoom / 1000);
-
+    // Use current frame.
     const current = useCurrentData();
 
+    // Create an offset vector that is negative the current position. This makes it so the current position is always the origin/center.
     const curr = useMemo(() => {
-        // console.log(data);
         if(!current) return new Vector3();
-        // console.log(d);
         return new Vector3(-current.position.x * SCALE, -current.position.y * SCALE, -current.position.z * SCALE);
     }, [current]);
 
@@ -161,19 +146,13 @@ export default function MainView3D({  }) {
             logarithmicDepthBuffer: true
         }}
         camera={{fov: 75, near: 0.001, far: 1000, position: [0, 0, 2]}}
-        // onWheel={(e) => {
-        //     setZoom((z) => z + e.deltaY);
-        // }}
         >
         <OrbitControls makeDefault />
         <Environment files="/res/hdr/HDR_subdued_blue_nebulae_2k.hdr" background={true}/>
         <>
             {
                 points.length > 1 ? <group position={curr}>
-                {/* <HeightMarkers f={f} curr={curr}/> */}
-                {/* <Box/> */}
                 <Line          
-                    // scale={[f, f, f]}
                     points={points} 
                     color={"#23aaff"}
                     lineWidth={3}  

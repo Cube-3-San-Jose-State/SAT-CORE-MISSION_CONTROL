@@ -5,7 +5,10 @@ import styles from "./altitude-indicator.module.css";
 
 
 
-
+/**
+ * Readout of Altitude and vertical Speed data.
+ * @returns 
+ */
 export function AltitudeIndicator() {
     const current = useCurrentData();
     return <AbsoluteUIComponent x={0.5} y={0} alignX={1}>

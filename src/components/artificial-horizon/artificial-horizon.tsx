@@ -3,6 +3,7 @@ import { WidgetGroup } from "../Widget";
 import { AbsoluteUIComponent } from "../absolute-ui-component/AbsoluteUIComponent";
 import { Quart, useCurrentData } from "../rocket-data-context/rocket-data-context";
 import { Euler, Quaternion } from "three";
+import { DEG_TO_RAD, METERS_TO_FEET, RAD_TO_DEG, ROOT_2 } from "../helpers/util/math";
 
 
 
@@ -12,13 +13,17 @@ function useQuaternion(x:Quart) {
     }, [x.x, x.y, x.z, x.w]);
 }
 
+/**
+ * Artificial horizon, inspired by aircraft.
+ * @returns 
+ */
 export default function ArtificialHorizon() {
 
 
-    const M_T_FT = 3.281;
-    const R_T_D = 180 / Math.PI;
-    const D_T_R = 1 / R_T_D;
-    const RT_2 = Math.sqrt(2);
+    const M_T_FT = METERS_TO_FEET;
+    const R_T_D = RAD_TO_DEG;
+    const D_T_R = DEG_TO_RAD;
+    const RT_2 = ROOT_2;
 
     // let [pitch, setPitch] = useState(0);
     // let [roll, setRoll] = useState(0);

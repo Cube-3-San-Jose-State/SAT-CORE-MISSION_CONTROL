@@ -1,7 +1,7 @@
 import { createContext, Dispatch, ReactNode, SetStateAction, useContext, useEffect, useRef, useState } from "react";
 import { useAddRocketData } from "../rocket-data-context/rocket-data-context";
 
-
+// Log message from Astreus Board.
 export interface LogEntry {
     msg: string
 }
@@ -23,34 +23,45 @@ export const SerialContext = createContext/* <GamepadContextData> */({
     logs: [] as LogEntry[],
 });
 
+/**
+ * Use the serial context
+ * @returns 
+ */
 export function useSerial() {
     return useContext(SerialContext);
 }
 
 
-
+/**
+ * Parse the Astreus framing scheme.
+ */
 class FrameParser {
-    START_OF_FRAME=0x01;
-    END_OF_FRAME=0x04;
-    ESCAPE=0x27;
-    state: 0|1|2;
-    buffer: number[];
-    maxFrameSize: number;
+    START_OF_FRAME=0x01; // Frame start delimeter
+    END_OF_FRAME=0x04; // Frame end delimeter
+    ESCAPE=0x27; // Escape byte
+    state: 0|1|2; // 0 = WAITING_FOR_START_OF_FRAME, 1 = PARSING_MESSAGE, 2 = AFTER_ESCAPE
+    buffer: number[]; // Internal buffer containing current parse frame
+    maxFrameSize: number; // Limit of frame size. Will reset and wait for next frame if this size is exceeded.
     constructor() {
         this.START_OF_FRAME=0x01; // Start of header
         this.END_OF_FRAME=0x04; // End of transmission
         this.ESCAPE=0x27;
         
         this.state = 0;
-        this.buffer = [];
-        this.maxFrameSize = 128;
+        this.buffer = []; // init to empty
+        this.maxFrameSize = 128; // Max 128 bytes
     }
 
+    /**
+     * Process a single byte
+     * @param byte 
+     * @returns `true` if a full frame was parsed. `false` otherwise
+     */
     parseByte(byte:number) {
+        // Check which state were in
         switch(this.state) {
             case 0:
                 // console.log(byte, "WAIT_START_OF_FRAME");
-
                 if(byte == this.START_OF_FRAME) {
                     this.state = 1;
                     // i = 0;
@@ -85,12 +96,21 @@ class FrameParser {
             return false;
     }
 
+    /**
+     * Get the stored frame.
+     * @returns 
+     */
     getFrame() {
         return new Uint8Array(this.buffer);
     }
 }
 
 
+/**
+ * Provide Serial configuration and data to all components
+ * @param param0 
+ * @returns 
+ */
 export function SerialContextProvider({ children } : { children : ReactNode }) {
 
     // const [ data, setData ] = useState(generateTestData() as unknown as RocketData[]);
@@ -112,29 +132,26 @@ export function SerialContextProvider({ children } : { children : ReactNode }) {
     useEffect(() => {
         if(connected) {
             let loop = true;
-            // while(run) {
-            //     console.log(10);
-            // }
-
             (async () => {
                 // let remain = "";
                 const parser = new FrameParser();
                 while (loop) {
+                    // Read Data
                     const { value } = await reader.current.read();
-                    // let decoded = await new TextDecoder().decode(value);
-                    // console.log(value);
 
-                    // console.log(value)
+                    // Parse every byte.
                     for(let i = 0; i < value.length; i ++) {
                         // console.log(parser)
                         if(parser.parseByte(value[i])) {
+                            // Create Data View from parsed frame.
                             let frame = parser.getFrame();
-                            // console.log(frame);
                             setFrames((old) => old.concat([frame]).slice(Math.max(old.length - 5, 0)));
                             let view = new DataView(frame.buffer);
-                            // console.log(frame);
 
+                            // Get a float from the frame at index
                             const getFloat = (i:number) => view.getFloat32(i, true);
+
+                            // Get a vector from the frame at index.
                             const getVector = (i:number) => {
                                 return {
                                     x: getFloat(i),
@@ -142,6 +159,8 @@ export function SerialContextProvider({ children } : { children : ReactNode }) {
                                     z: getFloat(i+8),
                                 }
                             }
+                            
+                            // Get a quarternion from the frame at index
                             const getQuart = (i:number) => {
                                 return {
                                     x: getFloat(i),
@@ -171,6 +190,7 @@ export function SerialContextProvider({ children } : { children : ReactNode }) {
                             if(frame[0] == 68) {
                                 // console.log(frame);
                                 if(frame.length < 81) continue;
+                                // Check the backend code
                                 addRocketDataRef.current({
                                     position: getVector(5),
                                     velocity: getVector(17),
@@ -183,6 +203,7 @@ export function SerialContextProvider({ children } : { children : ReactNode }) {
                                     verticalSpeed: NaN,
                                 });
                             }else if(frame[0] == 76) {
+                                // Log message.
                                 const d = new TextDecoder();
                                 const msg = d.decode(frame.slice(1));
                                 setLogs((old) => old.concat([{

@@ -17,6 +17,16 @@ interface AbsoluteUIComponentArgs {
 };
 
 
+/**
+ * Wrapper around all ui components. 
+ * It is positioned absolutely.
+ * X and Y are percentages of the current window width and height respectively. 
+ * Align values of 0 align with the left/top. Align 1 will center the element. Align 2 will align with the right/bottom/
+ * Width and height are determined by children.
+ * 
+ * @param param0 
+ * @returns 
+ */
 export function AbsoluteUIComponent({ x, y, alignX, alignY, children } : AbsoluteUIComponentArgs) {
 
     const [ _x, setX ] = useState(x ?? 0);

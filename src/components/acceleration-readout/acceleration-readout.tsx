@@ -6,6 +6,10 @@ import styles from "./acceleration-readout.module.css";
 
 
 
+/**
+ * Readout of Acceleration and Velocity Data
+ * @returns 
+ */
 export function AccelerationReadout() {
     const current = useCurrentData();
     const acceleration = current?.acceleration ?? { x: NaN, y: NaN, z: NaN };

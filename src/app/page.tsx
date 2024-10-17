@@ -15,13 +15,6 @@ import { RocketDataManager } from "@/components/rocket-data-manager/rocket-data-
 import { AccelerationReadout } from "@/components/acceleration-readout/acceleration-readout";
 // import { TimelineSlider } from "@/components/timeline-slider/TimelineSlider";
 
-function parametricFunction(t:number) {
-    return { 
-        x: 0.1*Math.cos(10*t), 
-        y: t, 
-        z: 0.1*Math.sin(10*t) 
-    };
-}
 export default function Trajectory() {
     
     const data = useRocketData();
