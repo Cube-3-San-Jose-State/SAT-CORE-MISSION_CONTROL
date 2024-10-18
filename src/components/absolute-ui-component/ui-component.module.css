@@ -1,0 +1,28 @@
+
+
+
+.label {  
+    font-size: 12px;
+    font-weight: normal;
+    color: #8f8f8f;
+    vertical-align: bottom;
+}
+
+
+.ui button {
+    border: #3265e688 1px solid;
+    padding: 5px;
+    background: #3265e611;
+    font-family: "Roboto Mono", monospace;
+    transition: background .3s;
+
+}
+.ui button:hover {
+    background: #3265e622;
+
+}
+
+.ui button:active {
+    background: #3265e633;
+
+}
